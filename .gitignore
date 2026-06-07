@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+*.pt
+*.onnx
+
+# ROS2 build artifacts
+build/
+install/
+log/
