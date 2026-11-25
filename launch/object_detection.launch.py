@@ -47,6 +47,9 @@ def generate_launch_description():
     #   • raw image
     #   • camera_info  (needed by most vision pipelines)
 
+    gz_image_topic = LaunchConfiguration("gz_image_topic")
+    gz_camera_info_topic = LaunchConfiguration("gz_camera_info_topic")
+
     gz_ros_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -54,14 +57,14 @@ def generate_launch_description():
         output="screen",
         arguments=[
             # image stream  (Gazebo → ROS2)
-            "/camera@sensor_msgs/msg/Image[gz.msgs.Image",
+            [gz_image_topic, "@sensor_msgs/msg/Image[gz.msgs.Image"],
             # camera info   (Gazebo → ROS2)
-            "/camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            [gz_camera_info_topic, "@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo"],
         ],
-        # Remap Gazebo topic names to your preferred ROS2 names if they differ
-        # remappings=[
-        #     ("/camera", "/drone/camera/image_raw"),
-        # ],
+        remappings=[
+            (gz_image_topic, "/camera"),
+            (gz_camera_info_topic, "/camera/camera_info"),
+        ],
     )
 
     # ── 3. YOLO flag-detection node ───────────────────────────────────────────
@@ -89,6 +92,14 @@ def generate_launch_description():
         [
             # Arguments
             dds_port_arg,
+            DeclareLaunchArgument(
+                "gz_image_topic", default_value="/camera",
+                description="Gazebo image topic as reported by gz topic -l",
+            ),
+            DeclareLaunchArgument(
+                "gz_camera_info_topic", default_value="/camera/camera_info",
+                description="Gazebo camera info topic as reported by gz topic -l",
+            ),
             # Processes / nodes
             LogInfo(msg="[1/3] Starting Micro XRCE-DDS Agent…"),
             micro_dds_agent,
